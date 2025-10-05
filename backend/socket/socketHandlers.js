@@ -56,6 +56,120 @@ module.exports = (io) => {
         socket.emit('error', { message: 'Failed to send message' });
       }
     });
+
+    // NEW: Handle message edit
+    socket.on('edit_message', async (data) => {
+      try {
+        const { messageId, newText, recipientId, groupId } = data;
+        
+        // Update in database
+        const message = await Message.findByIdAndUpdate(
+          messageId,
+          { text: newText, edited: true },
+          { new: true }
+        );
+
+        if (!message) {
+          socket.emit('error', { message: 'Message not found' });
+          return;
+        }
+
+        // Notify all relevant users
+        if (recipientId) {
+          // For private chat
+          const recipientSocketId = onlineUsers.get(recipientId);
+          if (recipientSocketId) {
+            io.to(recipientSocketId).emit('message_edited', {
+              messageId,
+              newText
+            });
+          }
+        }
+
+        if (groupId) {
+          // For group chat
+          const group = await Group.findById(groupId);
+          if (group) {
+            group.members.forEach(memberId => {
+              const memberSocketId = onlineUsers.get(memberId.toString());
+              if (memberSocketId) {
+                io.to(memberSocketId).emit('message_edited', {
+                  messageId,
+                  newText
+                });
+              }
+            });
+          }
+        }
+
+        // Confirm to sender
+        socket.emit('message_edited', { messageId, newText });
+      } catch (error) {
+        console.error('Error editing message:', error);
+        socket.emit('error', { message: 'Failed to edit message' });
+      }
+    });
+
+    // NEW: Handle message delete
+    socket.on('delete_message', async (data) => {
+      try {
+        const { messageId, deletedForEveryone, recipientId, groupId } = data;
+        
+        // Update in database
+        const message = await Message.findByIdAndUpdate(
+          messageId,
+          { 
+            deleted: true, 
+            deletedForEveryone: deletedForEveryone 
+          },
+          { new: true }
+        );
+
+        if (!message) {
+          socket.emit('error', { message: 'Message not found' });
+          return;
+        }
+
+        // Only notify others if deleted for everyone
+        if (deletedForEveryone) {
+          if (recipientId) {
+            // For private chat
+            const recipientSocketId = onlineUsers.get(recipientId);
+            if (recipientSocketId) {
+              io.to(recipientSocketId).emit('message_deleted', {
+                messageId,
+                deletedForEveryone: true
+              });
+            }
+          }
+
+          if (groupId) {
+            // For group chat
+            const group = await Group.findById(groupId);
+            if (group) {
+              group.members.forEach(memberId => {
+                const memberSocketId = onlineUsers.get(memberId.toString());
+                if (memberSocketId) {
+                  io.to(memberSocketId).emit('message_deleted', {
+                    messageId,
+                    deletedForEveryone: true
+                  });
+                }
+              });
+            }
+          }
+        }
+
+        // Confirm to sender
+        socket.emit('message_deleted', { 
+          messageId, 
+          deletedForEveryone 
+        });
+      } catch (error) {
+        console.error('Error deleting message:', error);
+        socket.emit('error', { message: 'Failed to delete message' });
+      }
+    });
     
     socket.on('typing', (data) => {
       const recipientSocketId = onlineUsers.get(data.recipientId);

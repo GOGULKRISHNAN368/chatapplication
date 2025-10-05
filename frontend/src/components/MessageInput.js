@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Send, Reply, Edit2, X } from 'lucide-react';
 
 function MessageInput({ 
@@ -25,9 +25,11 @@ function MessageInput({
   };
 
   // Set input value when editing
-  React.useEffect(() => {
+  useEffect(() => {
     if (editingMessage) {
       setInputMessage(editingMessage.text);
+    } else {
+      setInputMessage('');
     }
   }, [editingMessage]);
 

@@ -50,6 +50,24 @@ class SocketService {
     this.socket.emit('send_message', data);
   }
 
+  // NEW: Edit message
+  editMessage(data) {
+    if (!this.socket) {
+      console.error('Socket not connected');
+      return;
+    }
+    this.socket.emit('edit_message', data);
+  }
+
+  // NEW: Delete message
+  deleteMessage(data) {
+    if (!this.socket) {
+      console.error('Socket not connected');
+      return;
+    }
+    this.socket.emit('delete_message', data);
+  }
+
   sendTypingIndicator(recipientId, senderId, isTyping) {
     if (!this.socket) return;
     this.socket.emit('typing', { recipientId, senderId, isTyping });
@@ -76,6 +94,20 @@ class SocketService {
     if (!this.socket) return;
     this.socket.on('message_status_update', callback);
     this.listeners.set('message_status_update', callback);
+  }
+
+  // NEW: Listen for message edits
+  onMessageEdited(callback) {
+    if (!this.socket) return;
+    this.socket.on('message_edited', callback);
+    this.listeners.set('message_edited', callback);
+  }
+
+  // NEW: Listen for message deletions
+  onMessageDeleted(callback) {
+    if (!this.socket) return;
+    this.socket.on('message_deleted', callback);
+    this.listeners.set('message_deleted', callback);
   }
 
   onUserTyping(callback) {
