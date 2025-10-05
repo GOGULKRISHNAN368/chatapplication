@@ -236,8 +236,8 @@ This project is open source and available under the MIT License.
 
 ## Support
 
-For support, email your-email@example.com or open an issue in the repository.
+For support, email gogulkrishnan368@gmail.com or open an issue in the repository.
 
----
-
-Built with ❤️ using React and Node.js
+                                        
+  
+  
