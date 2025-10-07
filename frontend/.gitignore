@@ -1,0 +1,16 @@
+echo node_modules/
+.env
+backend/.env
+frontend/.env
+.env.local
+.env.production
+frontend/node_modules/.cache/
+backend/node_modules/.cache/
+*.log
+build/
+dist/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+coverage/ > .gitignore
